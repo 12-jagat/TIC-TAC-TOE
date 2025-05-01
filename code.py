@@ -65,12 +65,13 @@ def draw_board(board):
     for i in range(3):
         cols = st.columns(3)
         for j in range(3):
+            cell_key = f'{i}-{j}'  # Use a unique key for each button
             if board[i][j] == 1:
-                cols[j].button('X', key=f'{i}-{j}', disabled=True, use_container_width=True)
+                cols[j].button('X', key=f'{cell_key}-X', disabled=True, use_container_width=True)
             elif board[i][j] == -1:
-                cols[j].button('O', key=f'{i}-{j}', disabled=True, use_container_width=True)
+                cols[j].button('O', key=f'{cell_key}-O', disabled=True, use_container_width=True)
             else:
-                if cols[j].button(' ', key=f'{i}-{j}', use_container_width=True):
+                if cols[j].button(' ', key=cell_key, use_container_width=True):
                     board[i][j] = 1
                     if check_winner(board) == 0:
                         ai_move(board)
