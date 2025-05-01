@@ -75,14 +75,12 @@ def draw_board(board):
                     board[i][j] = 1
                     if check_winner(board) == 0:
                         ai_move(board)
-                    st.experimental_rerun()
+                    break  # Exit the loop once a move is made
 
 def ai_move(board):
     move = best_move(board)
     # Update the board with 'O' at the AI's move position
     board[move[0], move[1]] = -1
-    if check_winner(board) == 0:
-        draw_board(board)
 
 # --- Session State for Board Management ---
 if "board" not in st.session_state:
