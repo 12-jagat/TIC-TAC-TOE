@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 
-# --- Page Config (MUST be first Streamlit command) ---
+# --- Page Config ---
 st.set_page_config(page_title="Tic-Tac-Toe", layout="wide")
 
 # --- Minimax Algorithm ---
