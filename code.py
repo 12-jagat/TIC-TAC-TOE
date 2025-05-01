@@ -1,5 +1,4 @@
 import streamlit as st
-import random
 import numpy as np
 
 # --- Page Config (MUST be first Streamlit command) ---
