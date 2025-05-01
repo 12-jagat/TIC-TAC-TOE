@@ -1,105 +1,130 @@
 import streamlit as st
-import numpy as np
+import random
 
-# --- Page Config (MUST be first Streamlit command) ---
-st.set_page_config(page_title="Tic-Tac-Toe", layout="centered")
+# Initialize game state
+if 'board' not in st.session_state:
+    st.session_state.board = [' ' for _ in range(9)]  # Empty 3x3 board
+    st.session_state.current_player = 'X'  # Player 'X' starts
+    st.session_state.game_over = False
+    st.session_state.winner = None
+    st.session_state.turns = 0
 
-# --- Minimax Algorithm ---
+# Function to check if the game has a winner
+def check_winner():
+    # Check rows, columns, and diagonals
+    winning_combinations = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
+        [0, 4, 8], [2, 4, 6]              # Diagonals
+    ]
+    for combo in winning_combinations:
+        if st.session_state.board[combo[0]] == st.session_state.board[combo[1]] == st.session_state.board[combo[2]] != ' ':
+            return st.session_state.board[combo[0]]  # Return the winner ('X' or 'O')
+    return None
+
+# Minimax algorithm to make the best move for the AI
 def minimax(board, depth, is_maximizing):
-    winner = check_winner(board)
-    if winner == 1:
+    winner = check_winner()
+    if winner == 'O':
         return 1
-    if winner == -1:
+    elif winner == 'X':
         return -1
-    if all(cell != 0 for row in board for cell in row):
+    elif ' ' not in board:
         return 0
 
     if is_maximizing:
-        best = -float('inf')
-        for i in range(3):
-            for j in range(3):
-                if board[i][j] == 0:
-                    board[i][j] = 1
-                    best = max(best, minimax(board, depth + 1, False))
-                    board[i][j] = 0
-        return best
+        best_score = -float('inf')
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'O'
+                score = minimax(board, depth + 1, False)
+                board[i] = ' '
+                best_score = max(score, best_score)
+        return best_score
     else:
-        best = float('inf')
-        for i in range(3):
-            for j in range(3):
-                if board[i][j] == 0:
-                    board[i][j] = -1
-                    best = min(best, minimax(board, depth + 1, True))
-                    board[i][j] = 0
-        return best
+        best_score = float('inf')
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'X'
+                score = minimax(board, depth + 1, True)
+                board[i] = ' '
+                best_score = min(score, best_score)
+        return best_score
 
-def best_move(board):
-    best_val = -float('inf')
-    move = (-1, -1)
-    for i in range(3):
-        for j in range(3):
-            if board[i][j] == 0:
-                board[i][j] = 1
-                move_val = minimax(board, 0, False)
-                board[i][j] = 0
-                if move_val > best_val:
-                    best_val = move_val
-                    move = (i, j)
-    return move
+# Function for the AI to make its move
+def ai_move():
+    best_score = -float('inf')
+    best_move = None
+    for i in range(9):
+        if st.session_state.board[i] == ' ':
+            st.session_state.board[i] = 'O'
+            score = minimax(st.session_state.board, 0, False)
+            st.session_state.board[i] = ' '
+            if score > best_score:
+                best_score = score
+                best_move = i
+    st.session_state.board[best_move] = 'O'
 
-def check_winner(board):
-    for row in board:
-        if row[0] == row[1] == row[2] != 0:
-            return row[0]
-    for col in range(3):
-        if board[0][col] == board[1][col] == board[2][col] != 0:
-            return board[0][col]
-    if board[0][0] == board[1][1] == board[2][2] != 0:
-        return board[0][0]
-    if board[0][2] == board[1][1] == board[2][0] != 0:
-        return board[0][2]
-    return 0
+# Function to handle a player's move
+def make_move(index):
+    if st.session_state.board[index] == ' ' and not st.session_state.game_over:
+        # Player makes the move
+        st.session_state.board[index] = st.session_state.current_player
+        st.session_state.turns += 1
 
-# --- UI for Game ---
-def draw_board(board):
-    for i in range(3):
-        cols = st.columns(3)
-        for j in range(3):
-            cell_key = f'{i}-{j}'  # Use a unique key for each button
-            if board[i][j] == 1:
-                cols[j].button('X', key=f'{cell_key}-X', disabled=True, use_container_width=True)
-            elif board[i][j] == -1:
-                cols[j].button('O', key=f'{cell_key}-O', disabled=True, use_container_width=True)
+        # Check for winner after player's move
+        winner = check_winner()
+        if winner:
+            st.session_state.game_over = True
+            st.session_state.winner = winner
+        elif st.session_state.turns == 9:
+            st.session_state.game_over = True  # Game ends in a tie if all spots are filled
+            st.session_state.winner = 'Tie'
+        else:
+            # Switch to AI's turn
+            st.session_state.current_player = 'O'
+            ai_move()
+            # Check for winner after AI's move
+            winner = check_winner()
+            if winner:
+                st.session_state.game_over = True
+                st.session_state.winner = winner
+            elif st.session_state.turns == 9:
+                st.session_state.game_over = True
+                st.session_state.winner = 'Tie'
             else:
-                if cols[j].button(' ', key=cell_key, use_container_width=True):
-                    board[i][j] = 1
-                    if check_winner(board) == 0:
-                        ai_move(board)
-                    st.experimental_rerun()
+                # Switch back to player
+                st.session_state.current_player = 'X'
 
-def ai_move(board):
-    move = best_move(board)
-    board[move[0]][move[1]] = -1
-    if check_winner(board) == 0:
-        draw_board(board)
+# Display the current board
+st.title("Tic-Tac-Toe Game")
 
-# --- Session State for Board Management ---
-if "board" not in st.session_state:
-    st.session_state.board = np.zeros((3, 3), dtype=int)
+# Display game status
+if st.session_state.game_over:
+    if st.session_state.winner == 'Tie':
+        st.write("It's a tie!")
+    else:
+        st.write(f"Player {st.session_state.winner} wins!")
+else:
+    st.write(f"Player {st.session_state.current_player}'s turn")
 
-board = st.session_state.board
+# Create buttons for the Tic-Tac-Toe board
+for i in range(9):
+    col = i % 3
+    if col == 0:
+        col1, col2, col3 = st.columns(3)
 
-# --- Game Title ---
-st.title("🎮 Tic-Tac-Toe with Minimax AI")
+    button_label = st.session_state.board[i]
+    
+    # Display buttons for the Tic-Tac-Toe grid
+    if col1.button(button_label if button_label != ' ' else '', key=f"btn_{i}", on_click=make_move, args=(i,)):
+        break
 
-# --- Draw the Board ---
-draw_board(board)
-
-# --- Check Game Status ---
-winner = check_winner(board)
-if winner == 1:
-    st.success("🎉 You win!")
-elif winner == -1:
-    st.success("😱 AI wins!")
-elif all(board[i][j] != 0 for i in range(3) for j in range(3)):
-    st.warning("It's a draw!")
+# Restart game button
+if st.session_state.game_over:
+    if st.button("Restart Game"):
+        st.session_state.board = [' ' for _ in range(9)]
+        st.session_state.current_player = 'X'
+        st.session_state.game_over = False
+        st.session_state.winner = None
+        st.session_state.turns = 0
