@@ -108,17 +108,22 @@ if st.session_state.game_over:
 else:
     st.write(f"Player {st.session_state.current_player}'s turn")
 
-# Create buttons for the Tic-Tac-Toe board
-for i in range(9):
-    col = i % 3
-    if col == 0:
-        col1, col2, col3 = st.columns(3)
+# Create buttons for the Tic-Tac-Toe board in a 3x3 grid
+col1, col2, col3 = st.columns(3)
 
+# Create buttons in the grid
+for i in range(9):
     button_label = st.session_state.board[i]
     
-    # Display buttons for the Tic-Tac-Toe grid
-    if col1.button(button_label if button_label != ' ' else '', key=f"btn_{i}", on_click=make_move, args=(i,)):
-        break
+    if i < 3:
+        with col1:
+            button_label = st.button(button_label if button_label != ' ' else '', key=f"btn_{i}", on_click=make_move, args=(i,))
+    elif 3 <= i < 6:
+        with col2:
+            button_label = st.button(button_label if button_label != ' ' else '', key=f"btn_{i}", on_click=make_move, args=(i,))
+    else:
+        with col3:
+            button_label = st.button(button_label if button_label != ' ' else '', key=f"btn_{i}", on_click=make_move, args=(i,))
 
 # Restart game button
 if st.session_state.game_over:
