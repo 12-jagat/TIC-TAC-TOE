@@ -77,6 +77,7 @@ def draw_board(board):
             else:
                 if cols[j].button(' ', key=cell_key, use_container_width=True):
                     board[i][j] = 1  # Player move
+                    st.session_state.board = board  # Save the board state after player move
                     if check_winner(board) == 0:
                         ai_move(board)  # AI moves if game is not over
                     break  # Exit the loop once a valid move is made
@@ -84,6 +85,7 @@ def draw_board(board):
 def ai_move(board):
     move = best_move(board)  # Get the best move from minimax
     board[move[0], move[1]] = -1  # Update the board with 'O' (AI's move)
+    st.session_state.board = board  # Save the board state after AI move
 
 # --- Session State for Board Management ---
 if "board" not in st.session_state:
